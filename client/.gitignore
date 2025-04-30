@@ -1,0 +1,12 @@
+# Ignore backend build files
+NewsAIBackend/bin/
+NewsAIBackend/obj/
+
+# Ignore node_modules
+news-ai-frontend/node_modules/
+
+# Ignore environment files
+*.env
+
+# Ignore logs
+*.log
