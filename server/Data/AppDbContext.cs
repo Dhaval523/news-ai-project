@@ -1,17 +1,37 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Server.Models;
+using System.Text.Json;
+using System.Collections.Generic;
 
-public class AppDbContext : DbContext
+namespace Server.Data
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options) {}
+    public class AppDbContext : DbContext
+    {
+        private readonly IConfiguration _configuration;
 
-    public DbSet<Article> Articles { get; set; }
-    // Add other entities here
-}
+        public AppDbContext(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
 
-public class Article
-{
-    public int Id { get; set; }
-    public string Title { get; set; }
-    public string Content { get; set; }
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            var connectionString = _configuration.GetConnectionString("PostgresConnection");
+            optionsBuilder.UseNpgsql(connectionString);
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<User>()
+                .Property(u => u.Preferences)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+                    v => JsonSerializer.Deserialize<Dictionary<string, object>>(v, (JsonSerializerOptions)null)
+                )
+                .HasColumnType("jsonb");
+        }
+
+        public DbSet<User> Users { get; set; }
+    }
 }
