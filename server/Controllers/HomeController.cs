@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace news_ai_project.server.Controller
+namespace server.Controller
 {
     [ApiController]
     [Route("api/[controller]")]
