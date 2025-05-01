@@ -21,10 +21,7 @@ namespace Server.Models
     public string PasswordHash { get; set; }
 
     [MaxLength(100)]
-    public string FirstName { get; set; }
-
-    [MaxLength(100)]
-    public string LastName { get; set; }
+    public string FullName { get; set; }
 
     [MaxLength(255)]
     public string ProfileImageUrl { get; set; }
