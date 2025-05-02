@@ -18,6 +18,7 @@ namespace Server.Services
     {
         Task<ApiResponse<object>> RegisterAsync(RegisterRequest request);
         Task<ApiResponse<object>> LoginAsync(LoginRequest request);
+        Task<ApiResponse<object>> GoogleLoginResponseAsync(string email);
     }
 
     public class AuthService : IAuthService
@@ -94,17 +95,8 @@ namespace Server.Services
                     return ApiResponse<object>.FailureResponse("Invalid Email or Password.");
                 }
 
-                var claims = new List<Claim>
-                {
-                    new Claim("UserId", user.UserId.ToString()),
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim(ClaimTypes.Role, user.Role)
-                };
-
-                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                var principal = new ClaimsPrincipal(identity);
-
-                await _httpContextAccessor.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+                await GenerateTokenAsync(user);
+                
 
                 user.LastLogin = DateTime.UtcNow;
                 _context.Users.Update(user);
@@ -124,6 +116,49 @@ namespace Server.Services
             {
                 return ApiResponse<object>.FailureResponse($"An error occurred: {ex.Message}");
             }
+        }
+
+        public async Task<ApiResponse<object>> GoogleLoginResponseAsync(string email)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+            if (user == null)
+            {
+                return ApiResponse<object>.FailureResponse("User does not exist.");
+            }
+
+            await GenerateTokenAsync(user);
+                
+
+            user.LastLogin = DateTime.UtcNow;
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+                
+            var resultData = new
+            {
+                UserId = user.UserId,
+                Email = user.Email ,
+                Role = user.Role
+            };
+
+            return ApiResponse<object>.SuccessResponse(resultData, "Login successful");
+
+        }
+
+        private async Task GenerateTokenAsync(User user)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim("UserId", user.UserId.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role)
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await _httpContextAccessor.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
         }
 
     }
