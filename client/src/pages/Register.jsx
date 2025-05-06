@@ -14,11 +14,12 @@ const SignupPage = () => {
     confirmPassword: '',
   });
 
-  const { signUp  } = useAuthStore();
+  const { signUp , googleSignUp  } = useAuthStore();
   const navigate = useNavigate();
 
-  const handleGoogleSignup = () => {
+  const handleGoogleSignup = async () => {
     // Google OAuth implementation
+    await googleSignUp(selectedRole)
   };
 
   const handleSubmit = async (e) => {

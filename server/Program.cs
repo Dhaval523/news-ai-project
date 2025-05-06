@@ -26,12 +26,14 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         var googleAuthSection = builder.Configuration.GetSection("Authentication:Google");
         options.ClientId = googleAuthSection["ClientId"];
         options.ClientSecret = googleAuthSection["ClientSecret"];
-        options.AuthorizationEndpoint += "?prompt=select_account";
-        options.CallbackPath = "/api/auth/google-response";
+        options.CallbackPath = "/signin-google";
+        options.ClaimActions.MapJsonKey("urn:google:picture", "picture", "url");
+        options.ClaimActions.MapJsonKey("urn:google:given_name", "given_name");
+        options.ClaimActions.MapJsonKey("urn:google:family_name", "family_name");
         options.Events.OnRemoteFailure = context =>
         {
             context.Response.Redirect("/auth/error?message=" + Uri.EscapeDataString(context.Failure?.Message));
-            context.HandleResponse(); // suppress the exception
+            context.HandleResponse(); 
             return Task.CompletedTask;
         };
     });
@@ -40,10 +42,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")  // Allow the frontend's origin
-              .AllowAnyHeader()                     // Allow any headers
-              .AllowAnyMethod()                     // Allow any HTTP method (GET, POST, etc.)
-              .AllowCredentials();                  // Allow credentials (cookies, auth headers, etc.)
+        policy.WithOrigins("http://localhost:5173")  
+              .AllowAnyHeader()                     
+              .AllowAnyMethod()                     
+              .AllowCredentials();                 
     });
 });
 

@@ -1,13 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiSearch, FiArrowRight } from 'react-icons/fi';
 import { FaHammer, FaTools, FaPaintRoller, FaBolt, FaTruckMoving } from 'react-icons/fa';
 import Navbar from '../components/Navbar';
 import WorkerCard from '../components/WorkerCard';
+import { useAuthStore } from '../store/AuthStore';
 
 const UserDashboard = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState('all');
+
+  const { getUser , user } = useAuthStore();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      await getUser();
+    };
+  
+    fetchUser();
+  }, []);
+  
 
   const categories = [
     { id: 'all', name: 'All Services', icon: <FaTools className="text-xl" /> },

@@ -5,6 +5,8 @@ import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { FiMapPin } from 'react-icons/fi';
 import Menu from '../components/menu';
+import { useAuthStore } from "../store/AuthStore.js"
+import { useNavigate } from 'react-router-dom';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 
@@ -52,8 +54,23 @@ const WorkerDashboard = () => {
     }
   ]);
 
+
+  
+
   const [availability, setAvailability] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+
+  const { getUser  , user , logout  } = useAuthStore();  
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      await getUser();
+    };
+  
+    fetchUser();
+  }, []);
 
   // Chart data
   const earningsData = {
@@ -80,11 +97,16 @@ const WorkerDashboard = () => {
       booking.id === bookingId ? { ...booking, status: action } : booking
     ));
   };
+  
+  const handleLogout = async ()=>{
+    await logout();
+    navigate("/");
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
         <div className='flex'>
-         <Menu />
+         <Menu onLogout={handleLogout} />
 
         </div>
        

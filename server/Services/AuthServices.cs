@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity ;
 using Microsoft.EntityFrameworkCore ;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Cryptography;
 using System.Security.Claims;
 using  Server.Models;
 using Server.Data ;
@@ -19,6 +20,8 @@ namespace Server.Services
         Task<ApiResponse<object>> RegisterAsync(RegisterRequest request);
         Task<ApiResponse<object>> LoginAsync(LoginRequest request);
         Task<ApiResponse<object>> GoogleLoginResponseAsync(string email);
+        Task<ApiResponse<object>> GoogleSignUpResponseAsync(string fullName , string email , string role , string imageUrl);
+        Task<ApiResponse<object>> GetUser(string id);
     }
 
     public class AuthService : IAuthService
@@ -124,7 +127,7 @@ namespace Server.Services
 
             if (user == null)
             {
-                return ApiResponse<object>.FailureResponse("User does not exist.");
+                return  ApiResponse<object>.FailureResponse("User does not exist.");
             }
 
             await GenerateTokenAsync(user);
@@ -142,9 +145,66 @@ namespace Server.Services
                 Role = user.Role
             };
 
-            return ApiResponse<object>.SuccessResponse(resultData, "Login successful");
+            return  ApiResponse<object>.SuccessResponse(resultData, "Login successful");
 
         }
+
+        public async Task<ApiResponse<object>> GoogleSignUpResponseAsync(string fullName , string email , string role , string imageUrl)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+            if (user != null)
+            {
+               return await GoogleLoginResponseAsync(email);
+            }
+            
+            var password = GenerateSecurePassword();
+            var newUser = new User
+            {
+                FullName = fullName,
+                Email = email ,
+                Role = role ,
+                ProfileImageUrl = imageUrl 
+            };
+            var hashedPassword = _passwordHasher.HashPassword(newUser, password);
+
+            newUser.PasswordHash = _passwordHasher.HashPassword(newUser, password);
+            _context.Users.Add(newUser);
+            await _context.SaveChangesAsync();
+
+            return await GoogleLoginResponseAsync( newUser.Email);
+
+        }
+
+        public async Task<ApiResponse<object>> GetUser(string id)
+        {
+            if (!int.TryParse(id, out int userId))
+            {
+                return ApiResponse<object>.FailureResponse("Invalid user ID format.");
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+
+            if (user == null)
+            {
+                return ApiResponse<object>.FailureResponse("User not found.");
+            }
+
+            var userInfo = new
+            {
+                UserId = user.UserId,
+                Email = user.Email,
+                Role = user.Role ,
+                FullName = user.FullName,
+                ProfileImageUrl = user.ProfileImageUrl,
+                Bio = user.Bio ,
+                Location = user.Location ,
+                
+            };
+
+            return ApiResponse<object>.SuccessResponse(userInfo, "Fetch user successfully.");
+        }
+
 
         private async Task GenerateTokenAsync(User user)
         {
@@ -159,6 +219,22 @@ namespace Server.Services
             var principal = new ClaimsPrincipal(identity);
 
             await _httpContextAccessor.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+        }
+
+        private static string GenerateSecurePassword(int length = 32)
+        {
+            const string validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*";
+            var password = new char[length];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                byte[] bytes = new byte[length];
+                rng.GetBytes(bytes);
+                for (int i = 0; i < length; i++)
+                {
+                    password[i] = validChars[bytes[i] % validChars.Length];
+                }
+            }
+            return new string(password);
         }
 
     }

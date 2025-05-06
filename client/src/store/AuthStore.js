@@ -35,17 +35,51 @@ const useAuthStore = create(( set , get) => ({
     googleLogin : async() => {
         set({ isLogin: true });
       try {
-        // window.location.href = "http://localhost:5076/api/auth/google-login";
-
-        // console.log(response)
-        // set({ user: response.data.data });
-        // return response.data ;
+        window.location.href = "http://localhost:5076/api/auth/google-login";
+        
       } catch (error) {
         set({ user: null });
         console.error("Login failed:", error?.response?.data || error.message);
         throw error;
       } finally {
         set({ isLogin: false });
+      }
+    } ,
+
+    googleSignUp : async(role) => {
+      set({ isSignUp: true });
+      try {
+        window.location.href = `http://localhost:5076/api/auth/google-signup?role=${role}`;
+        // hit me endpoint
+        
+      } catch (error) {
+        set({ user: null });
+        console.error("Sign Up failed:", error?.response?.data || error.message);
+        throw error;
+      } finally {
+        set({ isSignUp: false });
+      }
+    } ,
+
+    getUser : async () => {
+      try {
+        const response = await axiosInstance.get("/api/auth/me");
+        console.log(response)
+        set({ user: response.data.data });
+      } catch (error) {
+        set({ user: null });
+        console.error("Fetching User failed:", error?.response?.data || error.message);
+        throw error;
+      }
+    },
+
+    logout : async () => {
+      try {
+        await axiosInstance.get("/api/auth/log-out");
+        
+      } catch (error) {
+        console.error("Logout failed:", error?.response?.data || error.message);
+        throw error;
       }
     }
 }));

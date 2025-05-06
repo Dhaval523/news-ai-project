@@ -14,14 +14,8 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   const handleGoogleLogin = async () => {
-    const res = await googleLogin();
-    if(res.success){
-      if(user.role == "worker"){
-        navigate("/workerdashboard")
-      }else{
-        navigate("/userdashboard")
-      }
-    }
+     await googleLogin();
+    
   };
 
   const handleSubmit = async (e) => {
