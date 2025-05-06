@@ -38,8 +38,8 @@ namespace Server.Controller
             }
         }
 
-        [HttpPost("signIn")]
-        public async Task<IActionResult> SignIn([FromBody] LoginRequest request)
+        [HttpPost("login")]
+        public async Task<IActionResult> LogIn([FromBody] LoginRequest request)
         {
             var response = await _authService.LoginAsync(request);
 

@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { FcGoogle } from 'react-icons/fc';
 import { FaHammer, FaUser } from 'react-icons/fa';
+import { useAuthStore  } from '../store/AuthStore';
+import { useNavigate } from 'react-router-dom';
+
 
 const SignupPage = () => {
   const [selectedRole, setSelectedRole] = useState(null);
@@ -8,17 +11,40 @@ const SignupPage = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
+
+  const { signUp  } = useAuthStore();
+  const navigate = useNavigate();
 
   const handleGoogleSignup = () => {
     // Google OAuth implementation
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission
+  
+    // Validate password confirmation (assuming you have confirmPassword in formData)
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+  
+    const data = {
+      FullName: formData.name,
+      Email: formData.email,
+      Password: formData.password,
+      Role: selectedRole
+    };
+  
+    const res = await signUp(data);
+
+    console.log(res);
+    if(res.success){
+      navigate("/");
+    }
   };
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">

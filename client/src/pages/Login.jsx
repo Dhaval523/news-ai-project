@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { FcGoogle } from 'react-icons/fc';
 import { motion } from 'framer-motion';
+import { useAuthStore } from '../store/AuthStore';
+import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -8,13 +10,30 @@ const LoginPage = () => {
     password: ''
   });
 
-  const handleGoogleLogin = () => {
-    // Google OAuth implementation
+  const {login  , user , googleLogin} = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleGoogleLogin = async () => {
+    const res = await googleLogin();
+    if(res.success){
+      if(user.role == "worker"){
+        navigate("/workerdashboard")
+      }else{
+        navigate("/userdashboard")
+      }
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission
+    const res = await login(formData);
+    if(res.success){
+      if(user.role == "worker"){
+        navigate("/workerdashboard")
+      }else{
+        navigate("/userdashboard")
+      }
+    }
   };
 
   return (

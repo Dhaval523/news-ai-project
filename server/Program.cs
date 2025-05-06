@@ -26,6 +26,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         var googleAuthSection = builder.Configuration.GetSection("Authentication:Google");
         options.ClientId = googleAuthSection["ClientId"];
         options.ClientSecret = googleAuthSection["ClientSecret"];
+        options.AuthorizationEndpoint += "?prompt=select_account";
+        options.CallbackPath = "/api/auth/google-response";
         options.Events.OnRemoteFailure = context =>
         {
             context.Response.Redirect("/auth/error?message=" + Uri.EscapeDataString(context.Failure?.Message));
@@ -33,6 +35,17 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
             return Task.CompletedTask;
         };
     });
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")  // Allow the frontend's origin
+              .AllowAnyHeader()                     // Allow any headers
+              .AllowAnyMethod()                     // Allow any HTTP method (GET, POST, etc.)
+              .AllowCredentials();                  // Allow credentials (cookies, auth headers, etc.)
+    });
+});
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -50,6 +63,8 @@ app.MapGet("/auth/error", (HttpContext http) =>
     var message = http.Request.Query["message"];
     return Results.Text($"OAuth error: {message}");
 });
+
+app.UseCors("AllowSpecificOrigin");
 
 app.UseAuthentication();  
 app.UseAuthorization();
