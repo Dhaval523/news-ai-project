@@ -36,6 +36,8 @@ namespace Server.Models
         public string? Location { get; set; }
 
         public bool IsVerified { get; set; } = false;
+        
+        public bool IsAvailable { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

@@ -191,9 +191,5 @@ namespace Server.Controller
             return Ok("Logout Successully");
         }
 
-
-
-
-
     }
 }

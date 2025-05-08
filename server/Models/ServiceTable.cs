@@ -30,8 +30,6 @@ public class ServiceTable
     [MaxLength(255)]
     public string? ImageUrl { get; set; }
 
-    public bool IsAvailable { get; set; } = true;
-
     [Range(0, 5)]
     public double Rating { get; set; } = 0;
 

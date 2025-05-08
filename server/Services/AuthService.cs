@@ -11,6 +11,7 @@ using  Server.Models;
 using Server.Data ;
 using Server.DTOs;
 using Server.Helpers; 
+using AutoMapper;
 
 
 namespace Server.Services
@@ -21,7 +22,7 @@ namespace Server.Services
         Task<ApiResponse<object>> LoginAsync(LoginRequest request);
         Task<ApiResponse<object>> GoogleLoginResponseAsync(string email);
         Task<ApiResponse<object>> GoogleSignUpResponseAsync(string fullName , string email , string role , string imageUrl);
-        Task<ApiResponse<object>> GetUser(string id);
+        Task<ApiResponse<UserDTO>> GetUser(string id);
     }
 
     public class AuthService : IAuthService
@@ -30,12 +31,14 @@ namespace Server.Services
         private readonly AppDbContext _context;  
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMapper _mapper ;
 
-        public AuthService(AppDbContext context,  IPasswordHasher<User> passwordHasher , IHttpContextAccessor httpContextAccessor)
+        public AuthService(AppDbContext context,  IPasswordHasher<User> passwordHasher , IHttpContextAccessor httpContextAccessor , IMapper mapper)
         {
             _context = context;
             _passwordHasher = passwordHasher;
             _httpContextAccessor = httpContextAccessor;
+            _mapper = mapper;
         }
 
         public async Task<ApiResponse<object>> RegisterAsync(RegisterRequest request)
@@ -176,33 +179,23 @@ namespace Server.Services
 
         }
 
-        public async Task<ApiResponse<object>> GetUser(string id)
+        public async Task<ApiResponse<UserDTO>> GetUser(string id)
         {
             if (!int.TryParse(id, out int userId))
             {
-                return ApiResponse<object>.FailureResponse("Invalid user ID format.");
+                return ApiResponse<UserDTO>.FailureResponse("Invalid user ID format.");
             }
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
 
             if (user == null)
             {
-                return ApiResponse<object>.FailureResponse("User not found.");
+                return ApiResponse<UserDTO>.FailureResponse("User not found.");
             }
 
-            var userInfo = new
-            {
-                UserId = user.UserId,
-                Email = user.Email,
-                Role = user.Role ,
-                FullName = user.FullName,
-                ProfileImageUrl = user.ProfileImageUrl,
-                Bio = user.Bio ,
-                Location = user.Location ,
-                
-            };
+            var userInfo = _mapper.Map<UserDTO>(user);
 
-            return ApiResponse<object>.SuccessResponse(userInfo, "Fetch user successfully.");
+            return ApiResponse<UserDTO>.SuccessResponse(userInfo, "Fetch user successfully.");
         }
 
 
