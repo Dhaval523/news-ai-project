@@ -32,6 +32,9 @@ namespace Server.Data
                 .HasColumnType("jsonb");
         }
 
+        
+
         public DbSet<User> Users { get; set; }
+        public DbSet<ServiceTable> Services { get; set;}
     }
 }
